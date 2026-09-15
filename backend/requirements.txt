@@ -1,0 +1,8 @@
+fastapi
+slowapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-jose
+passlib
