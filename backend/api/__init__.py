@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.middleware.logging import LoggingMiddleware
-from src.api.middleware.rate_limit import setup_rate_limiting
+from api.middleware.logging import LoggingMiddleware
+from api.middleware.rate_limit import setup_rate_limiting
+from api.db.base import Base
+from api.db.session import engine
+import api.db.models
 
 from .routes import register_routes
 from .core.env import env
@@ -15,6 +17,7 @@ def create_app() -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        Base.metadata.create_all(bind=engine)
         yield
 
     app = FastAPI(
@@ -24,12 +27,6 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         openapi_url=f"{env.API_V1_STR}/openapi.json",
         docs_url=f"{env.API_V1_STR}/docs"
-    )
-    
-    app.mount(
-        "/static", 
-        StaticFiles(directory="static"), 
-        name="static"
     )
 
     origins = [

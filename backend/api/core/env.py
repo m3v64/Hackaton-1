@@ -11,16 +11,15 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     API_URL: ClassVar[str] = "http://localhost:8000${API_V1_STR}"
     API_V1_STR: str = "/v1"
+    DATABASE_URL: str = "sqlite:///./hackaton.db"
     
     SECRET_KEY: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days
     
     @model_validator(mode="after")
-    def _require_secret_key(self) -> "Settings":
+    def _set_default_secret_key(self) -> "Settings":
         if not self.SECRET_KEY:
-            raise ValueError(
-                "SECRET_KEY is not set. Add it to your .env file.\n"
-            )
+            self.SECRET_KEY = "development-only-secret"
         return self
     
 env = Settings()

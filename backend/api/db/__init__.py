@@ -1,1 +1,1 @@
-from src.api.db import models
+from api.db import models

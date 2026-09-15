@@ -5,7 +5,7 @@ from typing import Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from src.api.core.env import env
+from api.core.env import env
 
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

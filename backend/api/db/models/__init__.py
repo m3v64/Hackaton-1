@@ -1,9 +1,10 @@
-from src.api.db.models.hackaton import (
+from api.db.models.hackaton import (
     Action,
     Course,
     Membership,
     MembershipCard,
     Permission,
+    PersonalTraining,
     PlannedCourse,
     Role,
     RolePermission,
@@ -24,6 +25,7 @@ __all__ = [
     "Role",
     "UserRole",
     "Permission",
+    "PersonalTraining",
     "RolePermission",
     "Action",
 ]

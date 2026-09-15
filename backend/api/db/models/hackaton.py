@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from src.api.db.models.enums import Action
+from api.db.models.enums import Action
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.api.db.base import Base
+from api.db.base import Base
 
 
 class User(Base):
@@ -20,6 +20,13 @@ class User(Base):
     data: Mapped[UserData | None] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
     roles: Mapped[list[UserRole]] = relationship(back_populates="user", cascade="all, delete-orphan")
     planned_courses: Mapped[list[UserPlannedCourse]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    membership_cards: Mapped[list[MembershipCard]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    planned_trainings: Mapped[list[PersonalTraining]] = relationship(
+        back_populates="user", foreign_keys="PersonalTraining.user_id", cascade="all, delete-orphan"
+    )
+    coached_trainings: Mapped[list[PersonalTraining]] = relationship(
+        back_populates="coach", foreign_keys="PersonalTraining.coach_id"
+    )
 
 
 class UserData(Base):
@@ -72,7 +79,7 @@ class UserPlannedCourse(Base):
 class Membership(Base):
     __tablename__ = "memberships"
 
-    class_name: Mapped[str] = mapped_column("class", String(255), primary_key=True)
+    class_name: Mapped[str] = mapped_column("class", String(80), primary_key=True)
     created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, server_default=func.now())
 
     cards: Mapped[list[MembershipCard]] = relationship(back_populates="membership")
@@ -80,11 +87,28 @@ class Membership(Base):
 
 class MembershipCard(Base):
     __tablename__ = "membershipCards"
+    __table_args__ = (UniqueConstraint("membershipClass", "userId", name="uq_membershipCards_class_user"),)
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
-    membership_class: Mapped[str | None] = mapped_column("membershipClass", ForeignKey("memberships.class"))
+    membership_class: Mapped[str] = mapped_column("membershipClass", ForeignKey("memberships.class"), nullable=False)
+    user_id: Mapped[str] = mapped_column("userId", ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    courses_included: Mapped[bool] = mapped_column("coursesIncluded", nullable=False, default=False)
+    personal_trainings_included: Mapped[bool] = mapped_column("personalTrainingsIncluded", nullable=False, default=False)
+    assigned_at: Mapped[datetime | None] = mapped_column("assignedAt", DateTime)
 
-    membership: Mapped[Membership | None] = relationship(back_populates="cards")
+    membership: Mapped[Membership] = relationship(back_populates="cards")
+    user: Mapped[User] = relationship(back_populates="membership_cards")
+
+
+class PersonalTraining(Base):
+    __tablename__ = "personalTrainings"
+
+    user_id: Mapped[str] = mapped_column("userId", ForeignKey("users.id"), primary_key=True)
+    coach_id: Mapped[str] = mapped_column("coachId", ForeignKey("users.id"), primary_key=True)
+    date_planned: Mapped[datetime] = mapped_column("datePlanned", DateTime, primary_key=True)
+
+    user: Mapped[User] = relationship(back_populates="planned_trainings", foreign_keys=[user_id])
+    coach: Mapped[User] = relationship(back_populates="coached_trainings", foreign_keys=[coach_id])
 
 
 class Role(Base):
