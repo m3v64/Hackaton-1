@@ -10,7 +10,6 @@ from api.schemas.models import (
     MembershipUpdate,
     PersonalTrainingRequest,
     PersonalTrainingSlot,
-    UserData,
 )
 
 router = APIRouter()
@@ -18,8 +17,8 @@ router = APIRouter()
 
 @router.post("/gate", response_model=GateResponse)
 def check_gate(body: GateRequest) -> GateResponse:
-    allowed = body.membership_card_id != "denied"
-    return GateResponse(allowed=allowed, reason="Access approved." if allowed else "Access denied.")
+    allowed = body.membership_card_id != ""
+    return GateResponse(allowed=allowed)
 
 
 @router.get("/{user_id}/membership", response_model=MembershipOut)

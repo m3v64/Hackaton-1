@@ -42,7 +42,6 @@ class GateRequest(BaseModel):
 
 class GateResponse(BaseModel):
     allowed: bool
-    reason: str
 
 
 class PersonalTrainingRequest(BaseModel):

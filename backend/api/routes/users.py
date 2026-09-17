@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from api.schemas.models import ActionResponse, UserCreate, UserData, UserOut, UserUpdate
+from api.schemas.models import ActionResponse, UserCreate, UserOut
 
 router = APIRouter()
 
