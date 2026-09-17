@@ -11,7 +11,18 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     API_URL: ClassVar[str] = "http://localhost:8000${API_V1_STR}"
     API_V1_STR: str = "/v1"
+    
+    DB_NAME: str = "hackaton-1"
+    DB_HOST: str = "db"
+    DB_PORT: int = 3306
+    DB_ROOT_PASS: str = "root"
+    DB_USER: str = "admin"
+    DB_PASS: str = "admin"
+    DB_RETRIES: int = 10
+    DB_RETRY_DELAY: int = 3
     DATABASE_URL: str = "sqlite:///./hackaton.db"
+    
+    LOGS_PATH: str = "./data/logs"
     
     SECRET_KEY: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days

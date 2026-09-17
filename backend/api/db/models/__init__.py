@@ -1,7 +1,5 @@
 from api.db.models.hackaton import (
     Action,
-    Course,
-    Membership,
     MembershipCard,
     Permission,
     PersonalTraining,
@@ -12,15 +10,15 @@ from api.db.models.hackaton import (
     UserData,
     UserPlannedCourse,
     UserRole,
+    MembershipType,
+    CourseType,
 )
 
 __all__ = [
     "User",
     "UserData",
-    "Course",
     "PlannedCourse",
     "UserPlannedCourse",
-    "Membership",
     "MembershipCard",
     "Role",
     "UserRole",
@@ -28,4 +26,6 @@ __all__ = [
     "PersonalTraining",
     "RolePermission",
     "Action",
+    "MembershipType",
+    "CourseType",
 ]

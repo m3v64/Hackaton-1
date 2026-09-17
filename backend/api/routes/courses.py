@@ -1,39 +1,38 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from datetime import datetime
 
-from api.db.models.hackaton import Course, PlannedCourse
-from api.db.session import get_db
-from api.schemas.models import CourseCreate, CourseOut, PlannedCourseCreate, PlannedCourseOut
+from fastapi import APIRouter
 
-router = APIRouter(prefix="/courses")
+from api.schemas.models import ActionResponse, CourseSlot, PlannedCourse, UserOut, UserUpdate
 
-
-@router.get("", response_model=list[CourseOut])
-def list_courses(db: Session = Depends(get_db)) -> list[Course]:
-    return db.query(Course).order_by(Course.name).all()
+router = APIRouter()
 
 
-@router.post("", response_model=CourseOut, status_code=status.HTTP_201_CREATED)
-def create_course(body: CourseCreate, db: Session = Depends(get_db)) -> Course:
-    if db.get(Course, body.name):
-        raise HTTPException(status_code=409, detail="Course already exists.")
-    course = Course(name=body.name)
-    db.add(course)
-    db.commit()
-    db.refresh(course)
-    return course
+@router.post("/{resource_id}", response_model=UserOut | ActionResponse)
+def update_user_or_enroll(resource_id: str, body: dict) -> UserOut | ActionResponse:
+    if "user_id" in body:
+        return ActionResponse(success=True, message=f"User {body['user_id']} enrolled in {resource_id}.")
+
+    update = UserUpdate.model_validate(body)
+    return UserOut(user_id=resource_id, **update.model_dump(exclude_none=True))
 
 
-@router.post("/planned", response_model=PlannedCourseOut, status_code=status.HTTP_201_CREATED)
-def plan_course(body: PlannedCourseCreate, db: Session = Depends(get_db)) -> PlannedCourse:
-    if not db.get(Course, body.course_name):
-        raise HTTPException(status_code=404, detail="Course not found.")
-    planned = PlannedCourse(
-        course_name=body.course_name,
-        planned_date=body.planned_date,
-        assigned_at=body.assigned_at,
-    )
-    db.add(planned)
-    db.commit()
-    db.refresh(planned)
-    return planned
+@router.get("/planned-courses", response_model=list[CourseSlot])
+def list_planned_courses() -> list[CourseSlot]:
+    return [
+        CourseSlot(
+            course_id="course-001",
+            course_name="Yoga",
+            time_slot=datetime(2026, 10, 2, 18, 0),
+        )
+    ]
+
+
+@router.get("/{user_id}/planned-courses", response_model=list[PlannedCourse])
+def list_user_planned_courses(user_id: str) -> list[PlannedCourse]:
+    return [
+        PlannedCourse(
+            course_id="course-001",
+            course_name="Yoga",
+            time_slot=datetime(2026, 10, 2, 18, 0),
+        )
+    ]

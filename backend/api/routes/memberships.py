@@ -1,50 +1,53 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from datetime import datetime
 
-from api.db.models.hackaton import Membership, MembershipCard, PersonalTraining, User
-from api.db.session import get_db
+from fastapi import APIRouter
+
 from api.schemas.models import (
-    MembershipCardCreate,
-    MembershipCardOut,
-    MembershipCreate,
+    GateRequest,
+    GateResponse,
+    ActionResponse,
     MembershipOut,
-    PersonalTrainingCreate,
-    PersonalTrainingOut,
+    MembershipUpdate,
+    PersonalTrainingRequest,
+    PersonalTrainingSlot,
+    UserData,
 )
 
-router = APIRouter(prefix="/memberships")
+router = APIRouter()
 
 
-@router.post("", response_model=MembershipOut, status_code=status.HTTP_201_CREATED)
-def create_membership(body: MembershipCreate, db: Session = Depends(get_db)) -> Membership:
-    if db.get(Membership, body.class_name):
-        raise HTTPException(status_code=409, detail="Membership already exists.")
-    membership = Membership(class_name=body.class_name)
-    db.add(membership)
-    db.commit()
-    db.refresh(membership)
-    return membership
+@router.post("/gate", response_model=GateResponse)
+def check_gate(body: GateRequest) -> GateResponse:
+    allowed = body.membership_card_id != "denied"
+    return GateResponse(allowed=allowed, reason="Access approved." if allowed else "Access denied.")
 
 
-@router.post("/cards", response_model=MembershipCardOut, status_code=status.HTTP_201_CREATED)
-def create_membership_card(body: MembershipCardCreate, db: Session = Depends(get_db)) -> MembershipCard:
-    if not db.get(Membership, body.membership_class):
-        raise HTTPException(status_code=404, detail="Membership not found.")
-    if not db.get(User, body.user_id):
-        raise HTTPException(status_code=404, detail="User not found.")
-    card = MembershipCard(**body.model_dump())
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-    return card
+@router.get("/{user_id}/membership", response_model=MembershipOut)
+def get_membership(user_id: str) -> MembershipOut:
+    return MembershipOut(user_id=user_id, membership_type="unlimited")
 
 
-@router.post("/trainings", response_model=PersonalTrainingOut, status_code=status.HTTP_201_CREATED)
-def create_personal_training(body: PersonalTrainingCreate, db: Session = Depends(get_db)) -> PersonalTraining:
-    if not db.get(User, body.user_id) or not db.get(User, body.coach_id):
-        raise HTTPException(status_code=404, detail="Training user or coach not found.")
-    training = PersonalTraining(**body.model_dump())
-    db.add(training)
-    db.commit()
-    db.refresh(training)
-    return training
+@router.post("/{user_id}/membership", response_model=MembershipOut)
+def set_membership(user_id: str, body: MembershipUpdate) -> MembershipOut:
+    return MembershipOut(user_id=user_id, membership_type=body.membership_type)
+
+
+@router.get("/memberships", response_model=list[MembershipOut])
+def list_memberships() -> list[MembershipOut]:
+    return [MembershipOut(user_id="user-001", membership_type="unlimited")]
+
+
+@router.post("/personal-training", response_model=ActionResponse)
+def book_personal_training(body: PersonalTrainingRequest) -> ActionResponse:
+    return ActionResponse(success=True, message=f"Training with {body.coached} booked for {body.time_slot}.")
+
+
+@router.get("/personal-training", response_model=list[PersonalTrainingSlot])
+def list_personal_training() -> list[PersonalTrainingSlot]:
+    return [
+        PersonalTrainingSlot(
+            coach_id="coach-001",
+            coach_name="Jamie Coach",
+            time_slot=datetime(2026, 10, 1, 10, 0),
+        )
+    ]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from api.db.models.enums import Action
+from api.db.models.enums import Action, MembershipType, CourseType
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -40,24 +40,14 @@ class UserData(Base):
     user: Mapped[User] = relationship(back_populates="data")
 
 
-class Course(Base):
-    __tablename__ = "courses"
-
-    name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, server_default=func.now())
-
-    planned_courses: Mapped[list[PlannedCourse]] = relationship(back_populates="course")
-
-
 class PlannedCourse(Base):
     __tablename__ = "plannedCourses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    course_name: Mapped[str] = mapped_column("coursesName", ForeignKey("courses.name"), nullable=False)
+    course: Mapped[CourseType] = mapped_column("CourseType", nullable=False)
     planned_date: Mapped[datetime | None] = mapped_column("plannedDate", DateTime, unique=True)
     assigned_at: Mapped[datetime | None] = mapped_column("assignedAt", DateTime)
 
-    course: Mapped[Course] = relationship(back_populates="planned_courses")
     users: Mapped[list[UserPlannedCourse]] = relationship(back_populates="planned_course_record")
 
 
@@ -76,27 +66,17 @@ class UserPlannedCourse(Base):
     user: Mapped[User] = relationship(back_populates="planned_courses")
 
 
-class Membership(Base):
-    __tablename__ = "memberships"
-
-    class_name: Mapped[str] = mapped_column("class", String(80), primary_key=True)
-    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, server_default=func.now())
-
-    cards: Mapped[list[MembershipCard]] = relationship(back_populates="membership")
-
-
 class MembershipCard(Base):
     __tablename__ = "membershipCards"
     __table_args__ = (UniqueConstraint("membershipClass", "userId", name="uq_membershipCards_class_user"),)
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
-    membership_class: Mapped[str] = mapped_column("membershipClass", ForeignKey("memberships.class"), nullable=False)
+    membership_type: Mapped[MembershipType] = mapped_column("MembershipType", nullable=False, default=False)
     user_id: Mapped[str] = mapped_column("userId", ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     courses_included: Mapped[bool] = mapped_column("coursesIncluded", nullable=False, default=False)
     personal_trainings_included: Mapped[bool] = mapped_column("personalTrainingsIncluded", nullable=False, default=False)
     assigned_at: Mapped[datetime | None] = mapped_column("assignedAt", DateTime)
 
-    membership: Mapped[Membership] = relationship(back_populates="cards")
     user: Mapped[User] = relationship(back_populates="membership_cards")
 
 

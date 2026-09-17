@@ -1,81 +1,121 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, EmailStr
 
 
-class UserDataCreate(BaseModel):
+class UserData(BaseModel):
+    first_name: str = "Alex"
+    last_name: str = "Example"
+    email: EmailStr = "alex@example.com"
+    phone: str = "+1 555 0100"
+
+
+class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
 
 
-class UserDataOut(UserDataCreate):
+class UserOut(UserData):
     user_id: str
-    created_at: datetime | None = None
-    model_config = ConfigDict(from_attributes=True)
+    membership_type: str = "unlimited"
 
 
-class UserCreate(BaseModel):
-    id: str
-    email: EmailStr
-    password: str
-    data: UserDataCreate | None = None
+class UserCreate(UserData):
+    user_id: str
 
 
-class UserOut(BaseModel):
-    id: str
-    email: EmailStr
-    created_at: datetime | None = None
-    data: UserDataOut | None = None
-    model_config = ConfigDict(from_attributes=True)
+class MembershipUpdate(BaseModel):
+    membership_type: str
+
+
+class MembershipOut(BaseModel):
+    user_id: str
+    membership_type: str
+    active: bool = True
+
+
+class GateRequest(BaseModel):
+    membership_card_id: str
+
+
+class GateResponse(BaseModel):
+    allowed: bool
+    reason: str
+
+
+class PersonalTrainingRequest(BaseModel):
+    coached: str
+    user_id: str
+    time_slot: datetime
+
+
+class PersonalTrainingSlot(BaseModel):
+    coach_id: str
+    coach_name: str
+    time_slot: datetime
+    available: bool = True
+
+
+class CourseEnrollmentRequest(BaseModel):
+    user_id: str
+
+
+class CourseSlot(BaseModel):
+    course_id: str
+    course_name: str
+    time_slot: datetime
+    available: bool = True
+
+
+class PlannedCourse(BaseModel):
+    course_id: str
+    course_name: str
+    time_slot: datetime
+
+
+class ActionResponse(BaseModel):
+    success: bool
+    message: str
 
 
 class CourseCreate(BaseModel):
     name: str
 
 
-class CourseOut(CourseCreate):
-    created_at: datetime | None = None
-    model_config = ConfigDict(from_attributes=True)
+class CourseOut(BaseModel):
+    course_id: str
+    name: str
+    time_slots: list[datetime] = []
 
 
 class PlannedCourseCreate(BaseModel):
     course_name: str
     planned_date: datetime | None = None
-    assigned_at: datetime | None = None
 
 
-class PlannedCourseOut(PlannedCourseCreate):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
+class PlannedCourseOut(PlannedCourse):
+    pass
 
 
 class MembershipCreate(BaseModel):
-    class_name: str
-
-
-class MembershipOut(MembershipCreate):
-    created_at: datetime | None = None
-    model_config = ConfigDict(from_attributes=True)
+    membership_type: str
 
 
 class MembershipCardCreate(BaseModel):
     id: str
-    membership_class: str
+    membership_type: str
     user_id: str
-    courses_included: bool = False
-    personal_trainings_included: bool = False
-    assigned_at: datetime | None = None
 
 
 class MembershipCardOut(MembershipCardCreate):
-    model_config = ConfigDict(from_attributes=True)
+    active: bool = True
 
 
-class PersonalTrainingCreate(BaseModel):
-    user_id: str
-    coach_id: str
-    date_planned: datetime
+class PersonalTrainingCreate(PersonalTrainingRequest):
+    pass
 
 
-class PersonalTrainingOut(PersonalTrainingCreate):
-    model_config = ConfigDict(from_attributes=True)
+class PersonalTrainingOut(PersonalTrainingRequest):
+    success: bool = True

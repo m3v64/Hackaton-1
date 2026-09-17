@@ -11,12 +11,39 @@ services:
     container_name: api
     env_file:
       - .env
-    environment:
-      DATABASE_URL: sqlite:////data/hackaton.db
     ports:
       - "${API_PORT:-8000}:8000"
-    volumes:
-      - api-data:/data
 
-volumes:
-  api-data:
+  # db:
+  #   image: mysql:8.0
+  #   container_name: db
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+  #     MYSQL_DATABASE: ${DB_NAME}
+  #     MYSQL_USER: ${DB_USER}
+  #     MYSQL_PASSWORD: ${DB_PASS}
+  #   ports:
+  #     - "${DB_PORT}:3306"
+  #   volumes:
+  #     - ${DB_PATH}:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+
+  # adminer:
+  #   image: ghcr.io/shyim/adminerevo:latest
+  #   container_name: adminer
+  #   restart: unless-stopped
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   environment:
+  #     ADMINER_DEFAULT_SERVER: db
+  #   ports:
+  #     - "${ADMINER_PORT}:8080"
